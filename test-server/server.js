@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const WebSocket = require('ws');
 
 
 const app = express();
@@ -66,8 +65,9 @@ app.post('/events', (req, res) => {
 });
 
 // If deployed to Heroku, choose port for listening dynamically
-app.listen(process.env.PORT || 80, "0.0.0.0", () => {
-  console.log(`Express server on ${process.env.PORT || 80}, 0.0.0.0`);
+const port = process.env.PORT || 1234;
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Express server on ${port}, 0.0.0.0`);
 });
 
 module.exports = app;
