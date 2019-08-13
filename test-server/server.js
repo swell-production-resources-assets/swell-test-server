@@ -19,7 +19,7 @@ app.use(function (req, res, next) {
 
 let eventsArr = [{ body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }];
 
-app.get('/', res.send('Successully deployed. Visit /events for SSE'));
+app.get('/', (req, res) => res.send('Successully deployed. Visit /events for SSE'));
 
 app.get('/events', (req, res) => {
   res.header('Content-Type', 'text/event-stream');
