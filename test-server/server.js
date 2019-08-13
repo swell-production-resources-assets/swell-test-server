@@ -70,103 +70,103 @@ app.listen(port, "0.0.0.0", () => {
   console.log(`Express server on ${port}, 0.0.0.0`);
 });
 
-// /*
-// WEB SOCKET
-// */
+/*
+WEB SOCKET
+*/
 
-// const wss = new WebSocket.Server({
-//   port: 5000,
-// });
+const wss = new WebSocket.Server({
+  port: 5000,
+});
 
-// function heartbeat() {
-//   this.isAlive = true;
-// }
+function heartbeat() {
+  this.isAlive = true;
+}
 
-// wss.on('connection', (wsClient) => {
-//   wsClient.send('You are connected to WS.');
-//   wsClient.isAlive = true;
-//   wsClient.on('pong', heartbeat);
+wss.on('connection', (wsClient) => {
+  wsClient.send('You are connected to WS.');
+  wsClient.isAlive = true;
+  wsClient.on('pong', heartbeat);
 
-//   wsClient.on('message', (message) => {
-//     console.log('received message');
+  wsClient.on('message', (message) => {
+    console.log('received message');
 
-//     wss.clients.forEach(client => {
-//       client.send('Echo: ' + message);
-//     })
-//   })
-// });
+    wss.clients.forEach(client => {
+      client.send('Echo: ' + message);
+    })
+  })
+});
 
-// // broadcast constantly
-// // setInterval(() => {
-// //   wss.clients.forEach(client => {
-// //     client.send("Hi from server.");
-// //   })
-// // }, 2000)
-
-// //ping
+// broadcast constantly
 // setInterval(() => {
 //   wss.clients.forEach(client => {
-//     if (client.isAlive === false) {
-//       return client.terminate();
-//     }
-
-//     client.isAlive = false;
-//     client.ping(() => { });
+//     client.send("Hi from server.");
 //   })
-// }, 10000)
+// }, 2000)
+
+//ping
+setInterval(() => {
+  wss.clients.forEach(client => {
+    if (client.isAlive === false) {
+      return client.terminate();
+    }
+
+    client.isAlive = false;
+    client.ping(() => { });
+  })
+}, 10000)
 
 
 
-// /* HTTP 2 */
+/* HTTP 2 */
 
-// const http2 = require('http2');
-// const fs = require('fs');
+const http2 = require('http2');
+const fs = require('fs');
 
-// const server = http2.createSecureServer({
-//   key: fs.readFileSync(path.join(__dirname, './', './localhost-privkey.pem')),
-//   cert: fs.readFileSync(path.join(__dirname, './', './localhost-cert.pem'))
-// });
-// server.on('error', (err) => console.error(err));
+const server = http2.createSecureServer({
+  key: fs.readFileSync(path.join(__dirname, './', './localhost-privkey.pem')),
+  cert: fs.readFileSync(path.join(__dirname, './', './localhost-cert.pem'))
+});
+server.on('error', (err) => console.error(err));
 
-// server.on('stream', (stream, headers) => {
-//   for (const name in headers) {
-//     console.log(`${name}: ${headers[name]}`);
-//   }
+server.on('stream', (stream, headers) => {
+  for (const name in headers) {
+    console.log(`${name}: ${headers[name]}`);
+  }
 
-//   let id = 0;
+  let id = 0;
 
-//   let receivedData = "";
+  let receivedData = "";
 
-//   stream.respond({
-//     'content-type': 'text/event-stream',
-//     'cache-control': 'no-cache',
-//     // 'set-cookie' : '1P_JAR=2018-12-02-21; expires=Tue, 01-Jan-2019 21:47:55 GMT; path=/; domain=.google.com',
-//     ':status': 200,
-//   });
+  stream.respond({
+    'content-type': 'text/event-stream',
+    'cache-control': 'no-cache',
+    // 'set-cookie' : '1P_JAR=2018-12-02-21; expires=Tue, 01-Jan-2019 21:47:55 GMT; path=/; domain=.google.com',
+    ':status': 200,
+  });
 
-//   let interval = setInterval(() => {
-//     stream.write('event: my-custom-event\n');
-//     stream.write('id: ' + id++ + '\n');
-//     stream.write('data : Your headers... ' + JSON.stringify(headers) + '\n');
-//     stream.write('data : Your body... ' + receivedData + '\n\n');
-//   }, 2000)
+  let interval = setInterval(() => {
+    stream.write('event: my-custom-event\n');
+    stream.write('id: ' + id++ + '\n');
+    stream.write('data : Your headers... ' + JSON.stringify(headers) + '\n');
+    stream.write('data : Your body... ' + receivedData + '\n\n');
+  }, 2000)
 
 
-//   stream.setEncoding('utf8')
-//   stream.on('data', (chunk) => {
-//     console.log('chunk', chunk);
-//     receivedData += chunk;
-//   })
+  stream.setEncoding('utf8')
+  stream.on('data', (chunk) => {
+    console.log('chunk', chunk);
+    receivedData += chunk;
+  })
 
-//   stream.on('error', err => {
-//     console.warn(err);
-//     stream.close();
-//     clearInterval(interval);
-//   })
-// });
+  stream.on('error', err => {
+    console.warn(err);
+    stream.close();
+    clearInterval(interval);
+  })
+});
 
-// server.listen(8443, () => {
-//   console.log('listening on 8443');
-// });
+server.listen(8443, () => {
+  console.log('listening on 8443');
+});
 
-// module.exports = app;
+module.exports = app;
