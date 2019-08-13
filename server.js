@@ -15,10 +15,15 @@ app.use(function (req, res, next) {
   next();
 });
 
+//------------------------
+// SSE1
+//------------------------
+
+app.listen(80, "0.0.0.0", () => {
+  console.log("Express server on 80, 0.0.0.0");
+});
 
 let eventsArr = [{ body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }];
-
-app.get('/', (req, res) => res.send('Successully deployed. Visit /events for SSE'));
 
 app.get('/events', (req, res) => {
   res.header('Content-Type', 'text/event-stream');
@@ -64,60 +69,77 @@ app.post('/events', (req, res) => {
   // }, 2500);
 });
 
-// If deployed to Heroku, choose port for listening dynamically
-const port = process.env.PORT || 80;
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Express server on ${port}, 0.0.0.0`);
-});
 
-/*
-WEB SOCKET
-*/
+//------------------------
+// WEBSOCKET
+//------------------------
 
 const wss = new WebSocket.Server({
   port: 5000,
 });
 
-function heartbeat() {
+function heartbeat() { //used for ping-pong
   this.isAlive = true;
 }
 
+// broadcast to all clients including itself
 wss.on('connection', (wsClient) => {
   wsClient.send('You are connected to WS.');
   wsClient.isAlive = true;
-  wsClient.on('pong', heartbeat);
+  wsClient.on('pong', heartbeat); //Pong messages are automatically sent in response to ping messages as required by the spec
 
   wsClient.on('message', (message) => {
     console.log('received message');
 
     wss.clients.forEach(client => {
-      client.send('Echo: ' + message);
+      // if (client !== wsClient && client.readyState === WebSocket.OPEN) {//to all clients excluding self (exclusive)
+      if (client.readyState === WebSocket.OPEN) { //to all clients including self (inclusive)
+        client.send('Echo: ' + message);
+      }
     })
   })
 });
 
-// broadcast constantly
-// setInterval(() => {
-//   wss.clients.forEach(client => {
-//     client.send("Hi from server.");
+// generic broadcast formula
+// wss.on('connection', function connection(ws) {
+//   ws.on('message', function incoming(data) {
+//     wss.clients.forEach(function each(client) {
+//       if (client.readyState === WebSocket.OPEN) {
+//         client.send(data)
+//       }
+//     })
 //   })
+// })
+
+//broadcast constantly
+// setInterval(() => {
+//     wss.clients.forEach(client => {
+//         client.send("Hi from server.");
+//     })
 // }, 2000)
 
+// How to detect and close broken connections?
+// Sometimes the link between the server and the client can be
+// interrupted in a way that keeps both the server and the client
+// unaware of the broken state of the connection (e.g. when pulling the cord)
+// In these cases ping messages can be used as
+// a means to verify that the remote endpoint is still responsive
 //ping
 setInterval(() => {
   wss.clients.forEach(client => {
-    if (client.isAlive === false) {
-      return client.terminate();
+    if (client.isAlive === false) { //checks if a client is inactive
+      return client.terminate(); //closes connection if so
     }
+    client.isAlive = false; //sets client to inactive
+    client.ping(() => { }); //pings the client (if they're still connected => it will reset client.isAlive to true || if the client is inactive, on the next pass of this function will terminate the connection)
+  }) //^Pong messages are automatically sent in response to ping messages as required by the spec => on.('pong', heartbeat) is what resets client.isAlive
+}, 10000) //10 seconds
+// Use WebSocket#terminate(), which immediately destroys the connection,
+// instead of WebSocket#close(), which waits for the close timer.
 
-    client.isAlive = false;
-    client.ping(() => { });
-  })
-}, 10000)
-
-
-
-/* HTTP 2 */
+//------------------------
+// HTTP 2 (SSE2)
+//------------------------
 
 const http2 = require('http2');
 const fs = require('fs');
@@ -168,5 +190,6 @@ server.on('stream', (stream, headers) => {
 server.listen(8443, () => {
   console.log('listening on 8443');
 });
+
 
 module.exports = app;
