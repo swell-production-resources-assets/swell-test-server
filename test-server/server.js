@@ -16,10 +16,6 @@ app.use(function (req, res, next) {
   next();
 });
 
-// If deployed to Heroku, choose port for listening dynamically
-app.listen(process.env.PORT || 80, "0.0.0.0", () => {
-  console.log(`Express server on ${process.env.PORT || 80}, 0.0.0.0`);
-});
 
 let eventsArr = [{ body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }, { body: 'test' }];
 
@@ -69,6 +65,10 @@ app.post('/events', (req, res) => {
   // }, 2500);
 });
 
+// If deployed to Heroku, choose port for listening dynamically
+app.listen(process.env.PORT || 80, "0.0.0.0", () => {
+  console.log(`Express server on ${process.env.PORT || 80}, 0.0.0.0`);
+});
 
 /*
 WEB SOCKET
@@ -168,8 +168,5 @@ server.on('stream', (stream, headers) => {
 server.listen(8443, () => {
   console.log('listening on 8443');
 });
-
-
-
 
 module.exports = app;
