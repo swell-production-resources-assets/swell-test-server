@@ -4,7 +4,7 @@
   "description": "Swell",
   "main": "main.js",
   "scripts": {
-    "server": "nodemon test-server/server.js"
+    "start": "nodemon test-server/server.js"
   },
   "author": "Schno Mozingo",
   "license": "MIT",
